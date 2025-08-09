@@ -20,6 +20,7 @@
     <br>
     - Install Fallout New Vegas somewhere <b>NOT</b> in Documents/Desktop/Program Files <br>
     - Install Fallout 3 Goty somewhere <b>NOT</b> in Documents/Desktop/Program Files but <b>IN THE SAME DRIVE</b> as Fallout New Vegas<br>
+    - Move this project on the same drive as those two installations if it was not the case already <br>
 <br>
     - Launch Fallout 3 Goty  at least once  at least once and in the launcher options make sure that everything is maxed, including screen definition and that the correct graphic card is selected. If its not, check power options for software on your laptop.<br>
     - Launch Fallout New Vegas at least once  at least once and in the launcher options make sure that everything is maxed, including screen definition and that the correct graphic card is selected. If its not, check power options for software on your laptop.<br>
@@ -52,7 +53,37 @@
     <input type="text" name="nexusapikey" id="nexusapikeyinput" size="88" value="<%= options.nexusapikey %>" placeholder=""> <button onclick="setNexusapikey()">SET</button>
 
     <br><br>
+    <b>Mod Organizer</b><br>
     <a href="/startdownload/MO"><button>Download Mod Organizer</button></a> 
+    <a href="/execute/MOInstall"><button>Install Mod Organizer</button></a> 
+
+   <br>- Accept the license, click Next.
+   <br>- Install it on the same drive as Fallout new vegas. Copy paste the installation path below. <br>
+      
+    <script>
+        let mopath = "";
+        let setmopath = function(){
+            mopath = document.getElementById("mopathinput").value;
+            console.log(mopath);
+            location.href="/setmopath?mopath=" + encodeURIComponent(mopath);
+        }
+    </script>
+    <input type="text" name="mopath" id="mopathinput" size="88" value="<%= options.mopath %>" placeholder="C:\TTW\MO2"> <button onclick="setmopath()">SET</button>
+    <br>
+    - Once the installation is complete, ensure that Launch Mod Organizer is ticked and click Finish.
+    <br>
+    - Once in mode organizer, click next => Create a Portable Instance => next => Tale of Two Wasteland => Steam => next => Enable All Options => next => leave lcoation to default => next  => finish => clear the read only flag => yes
+    <br>
+    - You can decide to connect MO2 to nexus in Settings (ctrl s) but it should not be necessary with this tool.
+    <br>
+    - Launch the fallout launcher from MO2 once and make sure your options are correct (Resolution, details to max, etc...)      <br>
+    - Close MO2
+
+     <br><br>
+    <b>TTW Core Mod</b><br>
+    - Manual Download the three files  <a href="https://mod.pub/ttw/133/files">Here</a>. You'll need a modpub account for that, and it aint worth automatizing. <br>
+    - Place them in a "TTW" folder at the root of the same drive as the rest of your installation (eg: C:\TTW\)<br>
+    <a href="/execute/TTWInstall"><button>Click This Button to Install CORE TTW Mod</button></a> 
 
 
     

@@ -36,12 +36,7 @@ router.get('/startdownload/', function (req, res) {
 router.get('/startdownload/VCRedist', function (req, res) {
 
     filedownloader.downloadAFileAndExtract("https://ttwnok.s3.eu-west-2.amazonaws.com/Visual-C-Runtimes-All-in-One-Jul-2025.zip", "Visual-C-Runtimes-All-in-One-Jul-2025.zip");
-    var options = {};
-
-    res.render('home', {
-			page : 'home',
-			options: options,
-		});
+    res.redirect("/");
 });
 
 

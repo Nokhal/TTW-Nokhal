@@ -58,6 +58,9 @@ let downloadAFileAndExtract = async function (fileUrl, filename){
     let extractpath =  '../downloads/extracted/' + filename.substring(0, filename.length -4);
 
     logger.info("Decompressing " + filename);
+    if (!fs.existsSync(extractpath)){
+        fs.mkdirSync(extractpath);
+    }
     await decompress(newpath, extractpath)
         .then((files) => {
            //logger.info(files);

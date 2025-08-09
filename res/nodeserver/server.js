@@ -2,6 +2,8 @@ let express = require('express');
 let app = express();
 logger = require('./src/logger.js').logger;
 
+const bodyParser = require('body-parser');
+
 logger.stream = {
     write: function (message, encoding) {
         logger.info(message);
@@ -17,8 +19,10 @@ let path = require('path');
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true, limit: "5mb", parameterLimit: 500000  }));
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
 
 var routes = require('./src/routing');
 app.use('/', routes);

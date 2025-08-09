@@ -18,13 +18,43 @@
     <br>
         <b>Manual Steps</b> 
     <br>
-    -Install Fallout New Vegas somewhere <b>NOT</b> in Documents/Desktop/Program Files <br>
-    -Install Fallout 3 Goty somewhere <b>NOT</b> in Documents/Desktop/Program Files but <b>IN THE SAME DRIVE</b> as Fallout New Vegas<br>
+    - Install Fallout New Vegas somewhere <b>NOT</b> in Documents/Desktop/Program Files <br>
+    - Install Fallout 3 Goty somewhere <b>NOT</b> in Documents/Desktop/Program Files but <b>IN THE SAME DRIVE</b> as Fallout New Vegas<br>
 <br>
-    -Launch Fallout 3 Goty  at least once  at least once and in the launcher options make sure that everything is maxed, including screen definition and that the correct graphic card is selected. If its not, check power options for software on your laptop.<br>
-    -Launch Fallout New Vegas at least once  at least once and in the launcher options make sure that everything is maxed, including screen definition and that the correct graphic card is selected. If its not, check power options for software on your laptop.<br>
+    - Launch Fallout 3 Goty  at least once  at least once and in the launcher options make sure that everything is maxed, including screen definition and that the correct graphic card is selected. If its not, check power options for software on your laptop.<br>
+    - Launch Fallout New Vegas at least once  at least once and in the launcher options make sure that everything is maxed, including screen definition and that the correct graphic card is selected. If its not, check power options for software on your laptop.<br>
 
-    - Make sure you can reach Fallout New Vegas main menu and create a new game. Do not save/play yet.    
+    - Make sure you can reach Fallout New Vegas main menu and create a new game. Do not save/play yet.    <br>
+    <br> - Copy paste the path of your Fallout New Vegas installation here
+    <script>
+        let nvpath = "";
+        let setNvPath = function(){
+            nvpath = document.getElementById("nvpathinput").value;
+            console.log(nvpath);
+            location.href="/setnvpath?nvpath=" + encodeURIComponent(nvpath);
+        }
+    </script>
+    <br>
+    <input type="text" name="nvpath" id="nvpathinput" size="88" value="<%= options.nvpath %>" placeholder="C:\Steam\steamapps\common\Fallout New Vegas"> <button onclick="setNvPath()">SET</button>
+    <br><br>
+
+    - Get your Nexus Mod API key from <a href="https://next.nexusmods.com/settings/api-keys" target="_blank">Here</a> and then paste it in the box below. Downloads wont work without one.<br>
+
+    
+    <script>
+        let nexusapikey = "";
+        let setNexusapikey = function(){
+            nexusapikey = document.getElementById("nexusapikeyinput").value;
+            console.log(nexusapikey);
+            location.href="/setnexusapikey?nexusapikey=" + encodeURIComponent(nexusapikey);
+        }
+    </script>
+    <input type="text" name="nexusapikey" id="nexusapikeyinput" size="88" value="<%= options.nexusapikey %>" placeholder=""> <button onclick="setNexusapikey()">SET</button>
+
+    <br><br>
+    <a href="/startdownload/MO"><button>Download Mod Organizer</button></a> 
+
+
     
 
 

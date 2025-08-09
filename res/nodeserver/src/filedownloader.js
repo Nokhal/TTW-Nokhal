@@ -6,6 +6,11 @@ const decompress = require("decompress");
 
 logger = require('./logger.js').logger;
 
+let nexusDownloadQueue = [];
+let currentQueueIndex = 0;
+let nexusCurrentDL = 0;
+let nexusMaxConcurrentDL = 1;
+
 let doTheDownloadAFile = async function (fileUrl, filename){
 
     const destination = '../downloads/tmp/' + filename;
@@ -71,6 +76,95 @@ let downloadAFileAndExtract = async function (fileUrl, filename){
     logger.info("Decompressed " + filename);
 }
 
+let downloadAFileFromNexusDo = async function (apikey, game_domain_name, mod_id, id, filename){
+
+    nexusCurrentDL = nexusCurrentDL + 1; // Race condition but not really cause node is single thread
+
+    let newpath =  '../downloads/downloaded/' + filename;
+     if (fs.existsSync(newpath)) {
+        logger.info('Already downloaded ' + filename);
+        await processNextNexusQueue();
+        return;
+    }
+    let downloadLink = "";
+
+    const options = {
+        hostname: 'api.nexusmods.com',
+        port: 443,
+        path: "/v1/games/" + game_domain_name + "/mods/" + mod_id + "/files/" + id + "/download_link.json?key=" + encodeURIComponent(apikey),
+        method: 'GET',
+        headers: {
+            'User-Agent': 'ttwnokhalinstaller',
+            'accept': 'application/json',
+            'apikey': apikey
+            }
+    };
+
+    https.get(options, res => {
+    let data = [];
+    res.on('data', chunk => {
+        data.push(chunk);
+    });
+
+    res.on('end', async () => {
+        //console.log('Response ended: ');
+        const jsonedanswer = JSON.parse(Buffer.concat(data).toString());
+        //console.log(jsonedanswer);
+        downloadLink = jsonedanswer[0].URI;
+        if(downloadLink != ""){
+            await doTheDownloadAFile(downloadLink, filename);
+            await moveADownloadedFile(filename);
+            nexusCurrentDL = nexusCurrentDL - 1;   // Race condition but not really cause node is single thread
+            await processNextNexusQueue();
+        }
+    }); 
+    }).on('error', err => {
+        console.log('Error: ', err.message);
+    });
+
+
+}
+
+
+let processNextNexusQueue = async function(){
+    let numbeInQ = nexusDownloadQueue.length - currentQueueIndex;
+    logger.info("Nexus download queue size: " + numbeInQ);
+
+    if(nexusCurrentDL >= nexusMaxConcurrentDL || currentQueueIndex >= nexusDownloadQueue.length){
+        return;
+    }
+
+    let o = nexusDownloadQueue[currentQueueIndex];
+    currentQueueIndex = currentQueueIndex + 1;
+
+    await downloadAFileFromNexusDo(
+        o.apikey,
+        o.game_domain_name,
+        o.mod_id,
+        o.id,
+        o.filename
+    );
+
+}
+
+let downloadAFileFromNexus = async function (apikey, game_domain_name, mod_id, id, filename){
+    let queueObj = {
+        apikey:apikey,
+        game_domain_name:game_domain_name,
+        mod_id:mod_id,
+        id:id,
+        filename:filename
+    }
+
+    nexusDownloadQueue.push(queueObj);
+
+    //console.log(nexusDownloadQueue)
+
+    logger.info()
+    await processNextNexusQueue();
+}
+
 
 exports.downloadAFile = downloadAFile;
 exports.downloadAFileAndExtract = downloadAFileAndExtract;
+exports.downloadAFileFromNexus = downloadAFileFromNexus;

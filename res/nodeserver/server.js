@@ -2,14 +2,31 @@ let express = require('express');
 let app = express();
 logger = require('./src/logger.js').logger;
 
-app.set('port', process.env.PORT || 2258);
-
 logger.stream = {
     write: function (message, encoding) {
         logger.info(message);
     }
 };
 
-var server = app.listen(app.get('port'), function () {
-            logger.info('server.js: Express server listening on port ' + app.get('port'));
-        });
+
+app.use(require("morgan")("combined", {
+        "stream": logger.stream
+    }));
+
+let path = require('path');
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true, limit: "5mb", parameterLimit: 500000  }));
+
+var routes = require('./src/routing');
+app.use('/', routes);
+
+app.set('port', process.env.PORT || 2258);
+
+
+var http = require('http');
+logger.info("server.js: Starting Server");
+http.createServer(app).listen( process.env.PORT || 2258);
+

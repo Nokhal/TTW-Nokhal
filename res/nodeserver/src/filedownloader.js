@@ -12,7 +12,7 @@ let nexusDownloadQueue = [];
 let currentQueueIndex = 0;
 let nexusCurrentDL = 0;
 let currentExtract = 0;
-let nexusMaxConcurrentDL = 1;
+let nexusMaxConcurrentDL = 2;
 
 
 let downloadsFinished = function (){
@@ -21,6 +21,8 @@ let downloadsFinished = function (){
 }
 
 let doTheDownloadAFile = async function (fileUrl, filename, shouldextract){
+
+    let finished = false;
 
     if(shouldextract){
         currentExtract = currentExtract +1;
@@ -39,17 +41,28 @@ let doTheDownloadAFile = async function (fileUrl, filename, shouldextract){
                 if(shouldextract){
                     await extractAFile(filename);
                     nexusCurrentDL = nexusCurrentDL - 1;  
+                    finished = true;
                 } else {
                     nexusCurrentDL = nexusCurrentDL - 1;   // Race condition but not really cause node is single thread
+                    finished = true;
+                    await processNextNexusQueue();
                 }
+                        
+
                
             });
         });
     }).on('error', (err) => {
         fs.unlink(destination, () => {
             logger.error('Error downloading file:', err);
+            finished = true;
         });
     });
+
+    while(!finished){
+        await delay(500);
+    }
+
 }
 
 let downloadAFile = async function (fileUrl, filename, shouldExtract){
@@ -189,6 +202,8 @@ let extractAFileExt = async function (filename, destOverrideName){
 
 let extractAFile = async function (filename, destOverrideName){
 
+    let finished = false;
+
     //logger.info("About to extract the content of " + filename);
     
     let newpath =  '../downloads/downloaded/' + filename;
@@ -225,13 +240,20 @@ let extractAFile = async function (filename, destOverrideName){
             });
         logger.info("Decompressed " + filename);
         currentExtract = currentExtract - 1;
+        finished = true;
+        await processNextNexusQueue();
     } else  if(parsedFilename.ext  == ".7z"){
         logger.info("Decompressing (7zip) " + filename);
         await _7z.unpack(newpath, extractpath);
         logger.info("Decompressed " + filename);
         currentExtract = currentExtract - 1;
+        finished = true;
+        await processNextNexusQueue();
     }
    
+    while(!finished){
+        await delay(500);
+    }
 
 }
 

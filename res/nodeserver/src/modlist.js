@@ -12,7 +12,7 @@ let downloadAndInstallCoreMods = async function (remanence){
     //Lets also add the few mods outside of nexus
     //https://github.com/ModdingLinked/Stewie-Tweaks-INIs/releases/download/15097988970/Stewie_Tweaks-VNV_INI.7z
     logger.info("Starting the download of Stewie_Tweaks-VNV_INI.7z");
-    filedownloader.downloadAFileAndExtract("https://ttwnok.s3.eu-west-2.amazonaws.com/Stewie_Tweaks-VNV_INI.7z", "Stewie_Tweaks-VNV_INI.7z");
+    await filedownloader.downloadAFileAndExtract("https://ttwnok.s3.eu-west-2.amazonaws.com/Stewie_Tweaks-VNV_INI.7z", "Stewie_Tweaks-VNV_INI.7z");
 
     //First we dump all the mods in the download list, and we want them all extracted too
     for(let i =0; i < coreMods.length; i++){
@@ -26,7 +26,13 @@ let downloadAndInstallCoreMods = async function (remanence){
         await delay(1000);
     }
 
-    await delay(500);
+
+    logger.info("Core list download finished, proceeding to installation...");
+    await delay(5000);
+    while(!filedownloader.downloadsFinished()){
+        await delay(1000);
+    }
+
 
     //Then we install them
     for(let i =0; i < coreMods.length; i++){
@@ -47,7 +53,7 @@ let downloadAndInstallCoreMods = async function (remanence){
 
             logger.info("Installed " + ModInstallName);
             
-            fs.rmSync(ModContent, { recursive: true, force: true });
+            //fs.rmSync(ModContent, { recursive: true, force: true });
             logger.info("Deleted Extracted content from " + ModFilename);
         }
     }
@@ -60,7 +66,7 @@ let downloadAndInstallCoreMods = async function (remanence){
             let ModInstallName = "Stewie Tweaks and Engine Fixes - INI";
             let ModFilename = parsedPath.name;
             let Modpath = "" + remanence.mopath + "/mods/" + ModInstallName;
-            let ModContent =  '../downloads/extracted/' + ModFilename;
+            let ModContent =  '../downloads/extracted/' + ModFilename + "/Stewie Tweaks - VNV INI/";
     
             if (!fs.existsSync(Modpath)){
                 fs.mkdirSync(Modpath);

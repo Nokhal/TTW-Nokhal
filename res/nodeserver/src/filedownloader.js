@@ -3,6 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const decompress = require("decompress");
 const _7z = require('7zip-min');
+const path = require('path');
 
 
 logger = require('./logger.js').logger;
@@ -170,7 +171,7 @@ let downloadAFileFromNexus = async function (apikey, game_domain_name, mod_id, i
 }
 
 
-let extractAFile = async function (filename){
+let extractAFile = async function (filename, destOverrideName){
 
     let newpath =  '../downloads/downloaded/' + filename;
 
@@ -180,9 +181,18 @@ let extractAFile = async function (filename){
     }
 
     let extractpath = "";
+
+    let parsedFilename = path.parse(filename);
+
+    if(destOverrideName == "" || destOverrideName == null){
+        extractpath = '../downloads/extracted/' + parsedFilename.name;
+    } else {
+        extractpath = '../downloads/extracted/' + destOverrideName;
+    }
+
     
-    if(filename.substring(filename.length -4) == ".zip"){
-        extractpath = '../downloads/extracted/' + filename.substring(0, filename.length -4);
+    if(parsedFilename.ext == ".zip"){
+       
         logger.info("Decompressing (zip) " + filename);
         if (!fs.existsSync(extractpath)){
             fs.mkdirSync(extractpath);
@@ -195,8 +205,7 @@ let extractAFile = async function (filename){
             // logger.info(error);
             });
         logger.info("Decompressed " + filename);
-    } else  if(filename.substring(filename.length - 3) == ".7z"){
-        extractpath = '../downloads/extracted/' + filename.substring(0, filename.length - 3);
+    } else  if(parsedFilename.ext  == ".7z"){
         logger.info("Decompressing (7zip) " + filename);
         await _7z.unpack(newpath, extractpath);
         logger.info("Decompressed " + filename);
@@ -208,3 +217,4 @@ let extractAFile = async function (filename){
 exports.downloadAFile = downloadAFile;
 exports.downloadAFileAndExtract = downloadAFileAndExtract;
 exports.downloadAFileFromNexus = downloadAFileFromNexus;
+exports.extractAFile = extractAFile;

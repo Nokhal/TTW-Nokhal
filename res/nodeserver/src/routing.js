@@ -4,6 +4,7 @@ logger = require('./logger.js').logger;
 let child_process = require('child_process');
 let filedownloader = require('./filedownloader.js');
 const fs = require("fs");
+const path = require('path');
 
 
 let remanence = {};
@@ -11,6 +12,7 @@ let remanence = {};
 let semaphores = {};
 semaphores.alreadyDownloadingVC = false;
 semaphores.alreadyDownloadingMO = false;
+
 
 
 
@@ -143,7 +145,19 @@ let loadRemanence = function(){
     }
 }
 
+
+
+loadRemanence();
+
+
+// ======================== Route specific stuff
+
 let ttwInstallExec = async function(){
+
+    //Start bydownloading the extra stuff we neeed
+
+
+    //Move and Extract the third party downloads
 
     let bigzipname = "Tale of Two Wastelands 3.4-133-3.4.0-2025.05.17-[mod.pub].7z";
     let smallzipname = "YUPTTW 13.4-133-13.4.0-2025.07.03-[mod.pub].7z";
@@ -173,7 +187,85 @@ let ttwInstallExec = async function(){
         })
     }
 
+    //Extracting the mods
+
+    await  filedownloader.extractAFile(bigzipname, "TalesOfTwoWasteland340");
+    await  filedownloader.extractAFile(smallzipname, "YUPTTW 134");
+    await  filedownloader.extractAFile(hotfixname, "HouseDialogHotfixTTW");
+
+
+    //Making a new separator
+    let newMO2TTWModSeparator = "" + remanence.mopath + "/mods/TTW Core_separator";
+
+    if (!fs.existsSync(newMO2TTWModSeparator)){
+
+        logger.info("Creating new separator TTW Core_separator" );
+        fs.mkdirSync(newMO2TTWModSeparator);
+        fs.writeFile("" + newMO2TTWModSeparator + "/meta.ini", metainiSeparator, 'utf8', (err) => {
+            if (err) {
+                logger.error('Error writing to file', err);
+            } else {
+                logger.info('Data written to file ' + "" + newMO2TTWModSeparator + "/meta.ini");
+            }
+        });
+
+    }
+
+    //Making the new TTW core Mod path
+    let newMO2TTWModPath = "" + remanence.mopath + "/mods/Tale of Two Wastelands";
+
+    if (!fs.existsSync(newMO2TTWModPath)){
+        fs.mkdirSync(newMO2TTWModPath);
+    }
+
+    //Making the new YUPTTW path
+    {
+        let ModInstallName = "YUPTTW 13.4";
+        let ModFilename = "YUPTTW 134";
+        let Modpath = "" + remanence.mopath + "/mods/" + ModInstallName;
+        let ModContent =  '../downloads/extracted/' + path.parse(ModFilename).name;
+
+        if (!fs.existsSync(Modpath)){
+            fs.mkdirSync(Modpath);
+
+            //Copying the data
+            fs.cpSync(ModContent, Modpath, {recursive: true});
+
+            logger.info("Installed " + ModInstallName);
+        }
+        fs.rmSync(ModContent, { recursive: true, force: true });
+        logger.info("Deleted Extracted content from " + ModFilename);
+    }
+
+    
+    //Installing the new HOUSE FIX mod
+    {
+        let ModInstallName = "Mr House Final Battle Hotfix";
+        let ModFilename = "HouseDialogHotfixTTW";
+        let Modpath = "" + remanence.mopath + "/mods/" + ModInstallName;
+        let ModContent =  '../downloads/extracted/' + path.parse(ModFilename).name;
+
+        if (!fs.existsSync(Modpath)){
+            fs.mkdirSync(Modpath);
+
+            //Copying the data
+            fs.cpSync(ModContent, Modpath, {recursive: true});
+
+            logger.info("Installed " + ModInstallName);
+        }
+        fs.rmSync(ModContent, { recursive: true, force: true });
+        logger.info("Deleted Extracted content from " + ModFilename);
+    }
 
 }
 
-loadRemanence();
+const metainiSeparator = `[General]
+modid=0
+version=
+newestVersion=
+category=0
+installationFile=
+
+[installedFiles]
+size=0
+`;

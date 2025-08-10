@@ -156,6 +156,12 @@ let ttwInstallExec = async function(){
 
     //Start bydownloading the extra stuff we neeed
 
+    //NVSE xNVSE
+    await filedownloader.downloadAFileFromNexus(remanence.nexusapikey, "newvegas", "67883", "1000154821", "New Vegas Script Extender 6-4-1.7z", true);;
+
+    //4Gb patcher
+    await filedownloader.downloadAFileFromNexus(remanence.nexusapikey, "newvegas", "62552", "1000075100", "4gb patcher 1-5.7z", true);;
+    
 
     //Move and Extract the third party downloads
 
@@ -167,21 +173,21 @@ let ttwInstallExec = async function(){
     let newpath =  '../downloads/downloaded/';
 
     if (fs.existsSync(oldpath + bigzipname)) {
-        fs.rename(oldpath + bigzipname, newpath + bigzipname, function (err) {
+        fs.renameSync(oldpath + bigzipname, newpath + bigzipname, function (err) {
             if (err) throw err
             logger.info('Successfully moved ' + bigzipname);
         })
     }
 
     if (fs.existsSync(oldpath + smallzipname)) {
-        fs.rename(oldpath + smallzipname, newpath + smallzipname, function (err) {
+        fs.renameSync(oldpath + smallzipname, newpath + smallzipname, function (err) {
             if (err) throw err
             logger.info('Successfully moved ' + smallzipname);
         })
     }
 
     if (fs.existsSync(oldpath + hotfixname)) {
-        fs.rename(oldpath + hotfixname, newpath + hotfixname, function (err) {
+        fs.renameSync(oldpath + hotfixname, newpath + hotfixname, function (err) {
             if (err) throw err
             logger.info('Successfully moved ' + hotfixname);
         })

@@ -35,14 +35,22 @@ let doTheDownloadAFile = async function (fileUrl, filename){
 
 let moveADownloadedFile = async function (filename){
 
+    logger.info("Moving from tmp to downloaded " + filename);
     let oldpath = '../downloads/tmp/' + filename;
     let newpath =  '../downloads/downloaded/' + filename;
+
+    let renamed = false;
 
     fs.rename(oldpath, newpath, function (err) {
         if (err) throw err
         logger.info('Successfully downloaded ' + filename);
-    })
+        renamed = true;
+    });
 
+    while(!renamed){
+        await delay(500);
+         logger.info("Stil moving from tmp to downloaded " + filename);
+    }
 
 }
 
@@ -71,24 +79,27 @@ let downloadAFileFromNexusDo = async function (apikey, game_domain_name, mod_id,
     nexusCurrentDL = nexusCurrentDL + 1; // Race condition but not really cause node is single thread
 
     let newpath =  '../downloads/downloaded/' + filename;
-     if (fs.existsSync(newpath)) {
+    if (fs.existsSync(newpath)) {
         logger.info('Already downloaded ' + filename);
-        await processNextNexusQueue();
         if(shouldExtract){
+
+            let parsedFilename = path.parse(filename);
             //Only extracting if not already extracted
-            if(filename.substring(filename.length -4) == ".zip"){
-                extractpath = '../downloads/extracted/' + filename.substring(0, filename.length -4);
-            } else  if(filename.substring(filename.length - 3) == ".7z"){
-                extractpath = '../downloads/extracted/' + filename.substring(0, filename.length - 3);
-            }
+            extractpath = '../downloads/extracted/' + parsedFilename.name;
+           
             if (!fs.existsSync(extractpath)){
                 await extractAFile(filename);
-            }            
+            }  else {
+                 logger.info('Already extracted ' + filename + " to " + parsedFilename.name);
+            }          
         }
+
+        await processNextNexusQueue();
         return;
     }
-    let downloadLink = "";
 
+    logger.info("Fetching download link from nexus for " + filename);
+    let downloadLink = "";
     const options = {
         hostname: 'api.nexusmods.com',
         port: 443,
@@ -113,13 +124,18 @@ let downloadAFileFromNexusDo = async function (apikey, game_domain_name, mod_id,
         //console.log(jsonedanswer);
         downloadLink = jsonedanswer[0].URI;
         if(downloadLink != ""){
+            logger.info("Downloading from nexus link of " + filename);
             await doTheDownloadAFile(downloadLink, filename);
+            logger.info("Finializing Download of " + filename);
             await moveADownloadedFile(filename);
             nexusCurrentDL = nexusCurrentDL - 1;   // Race condition but not really cause node is single thread
-            await processNextNexusQueue();
+
             if(shouldExtract){
-                extractAFile(filename);
+                logger.info("Checking if there is need to extract " + filename);
+                await extractAFile(filename);
             }
+            logger.info("Processing next nexus download after " + filename);
+            await processNextNexusQueue();
         }
     }); 
     }).on('error', err => {
@@ -139,8 +155,10 @@ let processNextNexusQueue = async function(){
     }
 
     let o = nexusDownloadQueue[currentQueueIndex];
+
     currentQueueIndex = currentQueueIndex + 1;
 
+    logger.info("Processing the download of the next nexus file: " + o.filename);
     await downloadAFileFromNexusDo(
         o.apikey,
         o.game_domain_name,
@@ -166,7 +184,7 @@ let downloadAFileFromNexus = async function (apikey, game_domain_name, mod_id, i
 
     //console.log(nexusDownloadQueue)
 
-    logger.info()
+    logger.info("Queuing a new file to download from nexus: " + filename);
     await processNextNexusQueue();
 }
 
@@ -218,3 +236,8 @@ exports.downloadAFile = downloadAFile;
 exports.downloadAFileAndExtract = downloadAFileAndExtract;
 exports.downloadAFileFromNexus = downloadAFileFromNexus;
 exports.extractAFile = extractAFile;
+
+
+const delay = millis => new Promise((resolve, reject) => {
+  setTimeout(_ => resolve(), millis)
+});

@@ -52,12 +52,14 @@ let doTheDownloadAFile = async function (fileUrl, filename, shouldextract){
     });
 }
 
-
 let downloadAFile = async function (fileUrl, filename, shouldExtract){
 
     let newpath =  '../downloads/downloaded/' + filename;
     if (fs.existsSync(newpath)) {
         logger.info('Already downloaded ' + filename);
+        if(shouldExtract){
+            await extractAFileExt(filename);
+        }
     } else {
         await doTheDownloadAFile(fileUrl, filename, shouldExtract);
     }

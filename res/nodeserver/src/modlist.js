@@ -76,4 +76,36 @@ let coreMods = [
         mod_id: "58277",
         file_id: "1000114298"
     },
+    {
+        modName: "JohnnyGuitar NVSE",
+        modFilename: "JohnnyGuitar NVSE.zip",
+        customInstall: false,
+        game_domain_name: "newvegas",
+        mod_id: "66927",
+        file_id: "1000114298"
+    },
+    {
+        modName: "JohnnyGuitar NVSE - INI preset",
+        modFilename: "JohnnyGuitar NVSE-INI-All Tweaks.7z",
+        customInstall: false,
+        game_domain_name: "newvegas",
+        mod_id: "86200",
+        file_id: "1000128535"
+    },    
+    {
+        modName: "ShowOff xNVSE",
+        modFilename: "ShowOff xNVSE.zip",
+        customInstall: false,
+        game_domain_name: "newvegas",
+        mod_id: "72541",
+        file_id: "1000129880"
+    },    
+    {
+        modName: "ShowOff xNVSE INI",
+        modFilename: "ShowOff INI.7z",
+        customInstall: false,
+        game_domain_name: "newvegas",
+        mod_id: "72541",
+        file_id: "1000129880"
+    },
 ];

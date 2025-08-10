@@ -13,6 +13,10 @@ let currentQueueIndex = 0;
 let nexusCurrentDL = 0;
 let nexusMaxConcurrentDL = 1;
 
+let downloadsFinished = function (){
+    return nexusCurrentDL == 0;
+}
+
 let doTheDownloadAFile = async function (fileUrl, filename, shouldextract){
 
     nexusCurrentDL = nexusCurrentDL + 1; // Race condition but not really cause node is single thread
@@ -216,6 +220,7 @@ exports.downloadAFile = downloadAFile;
 exports.downloadAFileAndExtract = downloadAFileAndExtract;
 exports.downloadAFileFromNexus = downloadAFileFromNexus;
 exports.extractAFile = extractAFile;
+exports.downloadsFinished = downloadsFinished;
 
 
 const delay = millis => new Promise((resolve, reject) => {

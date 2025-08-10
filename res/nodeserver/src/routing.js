@@ -15,7 +15,6 @@ semaphores.alreadyDownloadingMO = false;
 
 
 
-
 router.get('/chk', function (req, res) {
     let oki = {};
     oki.message = "OK";
@@ -217,6 +216,23 @@ let ttwInstallExec = async function(){
 
     }
 
+    //Making a new separator
+    newMO2TTWModSeparator = "" + remanence.mopath + "/mods/Utilities_separator";
+
+    if (!fs.existsSync(newMO2TTWModSeparator)){
+
+        logger.info("Creating new separator Utilities" );
+        fs.mkdirSync(newMO2TTWModSeparator);
+        fs.writeFile("" + newMO2TTWModSeparator + "/meta.ini", metainiSeparator, 'utf8', (err) => {
+            if (err) {
+                logger.error('Error writing to file', err);
+            } else {
+                logger.info('Data written to file ' + "" + newMO2TTWModSeparator + "/meta.ini");
+            }
+        });
+
+    }
+
     //Making the new TTW core Mod path
     let newMO2TTWModPath = "" + remanence.mopath + "/mods/Tale of Two Wastelands";
 
@@ -263,14 +279,20 @@ let ttwInstallExec = async function(){
         logger.info("Deleted Extracted content from " + ModFilename);
     }
 
+    //Waiting for all DL to be over and patching the game
+    while(!filedownloader.downloadsFinished()){
+        await delay(500);
+    }
+
+    await ttwnvsAnd4gbPatcherInstall();
+
 }
 
 let ttwnvsAnd4gbPatcherInstall = async function(){
 
-    
-    //Moving al the content from nvse to new vegas root
+    //Moving all the content from nvse to new vegas root
     {
-        let ModInstallName = "Mr House Final Battle Hotfix";
+        let ModInstallName = "New Vegas Script Extender 6-4-1";
         let ModFilename = "New Vegas Script Extender 6-4-1";
         let Modpath = "" +  remanence.nvpath;
         let ModContent =  '../downloads/extracted/' + "New Vegas Script Extender 6-4-1";
@@ -282,7 +304,41 @@ let ttwnvsAnd4gbPatcherInstall = async function(){
         fs.rmSync(ModContent, { recursive: true, force: true });
         logger.info("Deleted Extracted content from " + ModFilename);
     }
+
+        
+    //Moving all the content of 4gb patcher from nvse to new vegas root
+    {
+        let ModInstallName = "4gb patcher 1-5";
+        let ModFilename = "4gb patcher 1-5";
+        let Modpath = "" +  remanence.nvpath;
+        let ModContent =  '../downloads/extracted/' + "4gb patcher 1-5";
+
+
+        //Copying the data
+        fs.cpSync(ModContent, Modpath, {recursive: true});
+        logger.info("Installed " + ModInstallName);
+        fs.rmSync(ModContent, { recursive: true, force: true });
+        logger.info("Deleted Extracted content from " + ModFilename);
+    }
+
+    logger.info("Applying 4gb patch...");
+    child_process.exec('cd "' + remanence.nvpath +'" && "FNVpatch.exe"', (err, stdout, stderr) => {
+        if(err){
+            console.log(err);
+            return;
+        }
+        console.log(`stdout: ${stdout}`);
+        console.log("4gb patch applied!");
+    })
+
+    
+
 }
+
+
+const delay = millis => new Promise((resolve, reject) => {
+  setTimeout(_ => resolve(), millis)
+});
 
 const metainiSeparator = `[General]
 modid=0

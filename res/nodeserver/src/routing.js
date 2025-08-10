@@ -5,6 +5,7 @@ let child_process = require('child_process');
 let filedownloader = require('./filedownloader.js');
 const fs = require("fs");
 const path = require('path');
+const modlist = require('./modlist.js');
 
 
 let remanence = {};
@@ -118,6 +119,10 @@ router.get('/startdownload/', function (req, res) {
 
 
 
+
+
+
+
 // ======= EXPORT THE ROUTER =========================
 module.exports = router;
 
@@ -144,12 +149,10 @@ let loadRemanence = function(){
     }
 }
 
-
-
 loadRemanence();
 
-
 // ======================== Route specific stuff
+
 
 let ttwInstallExec = async function(){
 
@@ -194,9 +197,9 @@ let ttwInstallExec = async function(){
 
     //Extracting the mods
 
-    await  filedownloader.extractAFile(bigzipname, "TalesOfTwoWasteland340");
-    await  filedownloader.extractAFile(smallzipname, "YUPTTW 134");
-    await  filedownloader.extractAFile(hotfixname, "HouseDialogHotfixTTW");
+    await  filedownloader.extractAFileExt(bigzipname, "TalesOfTwoWasteland340");
+    await  filedownloader.extractAFileExt(smallzipname, "YUPTTW 134");
+    await  filedownloader.extractAFileExt(hotfixname, "HouseDialogHotfixTTW");
 
 
     //Making a new separator
@@ -278,6 +281,8 @@ let ttwInstallExec = async function(){
         fs.rmSync(ModContent, { recursive: true, force: true });
         logger.info("Deleted Extracted content from " + ModFilename);
     }
+
+    await modlist.downloadAndInstallCoreMods(remanence);
 
     //Waiting for all DL to be over and patching the game
     while(!filedownloader.downloadsFinished()){

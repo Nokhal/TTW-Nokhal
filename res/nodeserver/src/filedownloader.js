@@ -11,15 +11,22 @@ logger = require('./logger.js').logger;
 let nexusDownloadQueue = [];
 let currentQueueIndex = 0;
 let nexusCurrentDL = 0;
+let currentExtract = 0;
 let nexusMaxConcurrentDL = 1;
 
+
 let downloadsFinished = function (){
-    return nexusCurrentDL == 0;
+    logger.info("nexusCurrentDL: " + nexusCurrentDL + " currentExtract:" + currentExtract);
+    return (nexusCurrentDL == 0 && currentExtract == 0);
 }
 
 let doTheDownloadAFile = async function (fileUrl, filename, shouldextract){
 
+    if(shouldextract){
+        currentExtract = currentExtract +1;
+    }
     nexusCurrentDL = nexusCurrentDL + 1; // Race condition but not really cause node is single thread
+
     const destination = '../downloads/tmp/' + filename;
 
     const file = fs.createWriteStream(destination);
@@ -31,8 +38,11 @@ let doTheDownloadAFile = async function (fileUrl, filename, shouldextract){
                 await moveADownloadedFile(filename);
                 if(shouldextract){
                     await extractAFile(filename);
+                    nexusCurrentDL = nexusCurrentDL - 1;  
+                } else {
+                    nexusCurrentDL = nexusCurrentDL - 1;   // Race condition but not really cause node is single thread
                 }
-                nexusCurrentDL = nexusCurrentDL - 1;   // Race condition but not really cause node is single thread
+               
             });
         });
     }).on('error', (err) => {
@@ -77,6 +87,7 @@ let downloadAFileFromNexusDo = async function (apikey, game_domain_name, mod_id,
             extractpath = '../downloads/extracted/' + parsedFilename.name;
            
             if (!fs.existsSync(extractpath)){
+                currentExtract = currentExtract +1;
                 await extractAFile(filename);
             }  else {
                  logger.info('Already extracted ' + filename + " to " + parsedFilename.name);
@@ -169,6 +180,10 @@ let downloadAFileFromNexus = async function (apikey, game_domain_name, mod_id, i
     await processNextNexusQueue();
 }
 
+let extractAFileExt = async function (filename, destOverrideName){
+    currentExtract = currentExtract +1;
+    await extractAFile(filename, destOverrideName);
+}
 
 let extractAFile = async function (filename, destOverrideName){
 
@@ -207,10 +222,12 @@ let extractAFile = async function (filename, destOverrideName){
             // logger.info(error);
             });
         logger.info("Decompressed " + filename);
+        currentExtract = currentExtract - 1;
     } else  if(parsedFilename.ext  == ".7z"){
         logger.info("Decompressing (7zip) " + filename);
         await _7z.unpack(newpath, extractpath);
         logger.info("Decompressed " + filename);
+        currentExtract = currentExtract - 1;
     }
    
 
@@ -219,7 +236,7 @@ let extractAFile = async function (filename, destOverrideName){
 exports.downloadAFile = downloadAFile;
 exports.downloadAFileAndExtract = downloadAFileAndExtract;
 exports.downloadAFileFromNexus = downloadAFileFromNexus;
-exports.extractAFile = extractAFile;
+exports.extractAFileExt = extractAFileExt;
 exports.downloadsFinished = downloadsFinished;
 
 

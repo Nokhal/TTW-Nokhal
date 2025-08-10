@@ -13,8 +13,9 @@ let currentQueueIndex = 0;
 let nexusCurrentDL = 0;
 let nexusMaxConcurrentDL = 1;
 
-let doTheDownloadAFile = async function (fileUrl, filename){
+let doTheDownloadAFile = async function (fileUrl, filename, shouldextract){
 
+    nexusCurrentDL = nexusCurrentDL + 1; // Race condition but not really cause node is single thread
     const destination = '../downloads/tmp/' + filename;
 
     const file = fs.createWriteStream(destination);
@@ -22,8 +23,12 @@ let doTheDownloadAFile = async function (fileUrl, filename){
     https.get(fileUrl, (response) => {
         response.pipe(file);
         file.on('finish', () => {
-            file.close(() => {
-
+            file.close(async () =>  {
+                await moveADownloadedFile(filename);
+                if(shouldextract){
+                    await extractAFile(filename);
+                }
+                nexusCurrentDL = nexusCurrentDL - 1;   // Race condition but not really cause node is single thread
             });
         });
     }).on('error', (err) => {
@@ -33,26 +38,6 @@ let doTheDownloadAFile = async function (fileUrl, filename){
     });
 }
 
-let moveADownloadedFile = async function (filename){
-
-    logger.info("Moving from tmp to downloaded " + filename);
-    let oldpath = '../downloads/tmp/' + filename;
-    let newpath =  '../downloads/downloaded/' + filename;
-
-    let renamed = false;
-
-    fs.rename(oldpath, newpath, function (err) {
-        if (err) throw err
-        logger.info('Successfully downloaded ' + filename);
-        renamed = true;
-    });
-
-    while(!renamed){
-        await delay(500);
-         logger.info("Stil moving from tmp to downloaded " + filename);
-    }
-
-}
 
 let downloadAFile = async function (fileUrl, filename, shouldExtract){
 
@@ -60,23 +45,23 @@ let downloadAFile = async function (fileUrl, filename, shouldExtract){
     if (fs.existsSync(newpath)) {
         logger.info('Already downloaded ' + filename);
     } else {
-        await doTheDownloadAFile(fileUrl, filename, false);
-        await moveADownloadedFile(filename);
+        await doTheDownloadAFile(fileUrl, filename, shouldExtract);
     }
-
-    if(shouldExtract){
-        extractAFile(filename);
-    }
-
 }
 
 let downloadAFileAndExtract = async function (fileUrl, filename){
     await downloadAFile(fileUrl, filename, true);
 }
 
-let downloadAFileFromNexusDo = async function (apikey, game_domain_name, mod_id, id, filename, shouldExtract){
+let moveADownloadedFile = async function (filename){
 
-    nexusCurrentDL = nexusCurrentDL + 1; // Race condition but not really cause node is single thread
+    let oldpath = '../downloads/tmp/' + filename;
+    let newpath =  '../downloads/downloaded/' + filename;
+
+    fs.renameSync(oldpath, newpath);
+}
+
+let downloadAFileFromNexusDo = async function (apikey, game_domain_name, mod_id, id, filename, shouldExtract){
 
     let newpath =  '../downloads/downloaded/' + filename;
     if (fs.existsSync(newpath)) {
@@ -125,15 +110,7 @@ let downloadAFileFromNexusDo = async function (apikey, game_domain_name, mod_id,
         downloadLink = jsonedanswer[0].URI;
         if(downloadLink != ""){
             logger.info("Downloading from nexus link of " + filename);
-            await doTheDownloadAFile(downloadLink, filename);
-            logger.info("Finializing Download of " + filename);
-            await moveADownloadedFile(filename);
-            nexusCurrentDL = nexusCurrentDL - 1;   // Race condition but not really cause node is single thread
-
-            if(shouldExtract){
-                logger.info("Checking if there is need to extract " + filename);
-                await extractAFile(filename);
-            }
+            await doTheDownloadAFile(downloadLink, filename, shouldExtract);
             logger.info("Processing next nexus download after " + filename);
             await processNextNexusQueue();
         }
@@ -191,6 +168,8 @@ let downloadAFileFromNexus = async function (apikey, game_domain_name, mod_id, i
 
 let extractAFile = async function (filename, destOverrideName){
 
+    //logger.info("About to extract the content of " + filename);
+    
     let newpath =  '../downloads/downloaded/' + filename;
 
     if (!fs.existsSync(newpath)) {
@@ -207,14 +186,15 @@ let extractAFile = async function (filename, destOverrideName){
     } else {
         extractpath = '../downloads/extracted/' + destOverrideName;
     }
-
     
+    if (!fs.existsSync(extractpath)){
+        logger.info("Creating extract folder at " + extractpath);
+        fs.mkdirSync(extractpath);
+    }
+
     if(parsedFilename.ext == ".zip"){
-       
         logger.info("Decompressing (zip) " + filename);
-        if (!fs.existsSync(extractpath)){
-            fs.mkdirSync(extractpath);
-        }
+
         await decompress(newpath, extractpath)
             .then((files) => {
             //logger.info(files);

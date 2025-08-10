@@ -265,6 +265,25 @@ let ttwInstallExec = async function(){
 
 }
 
+let ttwnvsAnd4gbPatcherInstall = async function(){
+
+    
+    //Moving al the content from nvse to new vegas root
+    {
+        let ModInstallName = "Mr House Final Battle Hotfix";
+        let ModFilename = "New Vegas Script Extender 6-4-1";
+        let Modpath = "" +  remanence.nvpath;
+        let ModContent =  '../downloads/extracted/' + "New Vegas Script Extender 6-4-1";
+
+
+        //Copying the data
+        fs.cpSync(ModContent, Modpath, {recursive: true});
+        logger.info("Installed " + ModInstallName);
+        fs.rmSync(ModContent, { recursive: true, force: true });
+        logger.info("Deleted Extracted content from " + ModFilename);
+    }
+}
+
 const metainiSeparator = `[General]
 modid=0
 version=
